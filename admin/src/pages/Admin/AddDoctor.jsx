@@ -13,6 +13,7 @@ const AddDoctor = () => {
     const [experience, setExperience] = useState('1 Year')
     const [fees, setFees] = useState('')
     const [about, setAbout] = useState('')
+    const [caseHistory, setCaseHistory] = useState('')
     const [speciality, setSpeciality] = useState('General physician')
     const [degree, setDegree] = useState('')
     const [address1, setAddress1] = useState('')
@@ -37,6 +38,7 @@ const AddDoctor = () => {
             formData.append('experience', experience)
             formData.append('fees', Number(fees))
             formData.append('about', about)
+            formData.append('caseHistory', caseHistory)
             formData.append('speciality', speciality)
             formData.append('degree', degree)
             formData.append('address', JSON.stringify({ line1: address1, line2: address2 }))
@@ -53,6 +55,7 @@ const AddDoctor = () => {
                 setAddress2('')
                 setDegree('')
                 setAbout('')
+                setCaseHistory('')
                 setFees('')
             } else {
                 toast.error(data.message)
@@ -221,6 +224,17 @@ const AddDoctor = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500" 
                                 rows="4" 
                                 placeholder="Brief professional summary..."
+                            ></textarea>
+                        </div>
+
+                        <div>
+                            <label className="block text-gray-700 mb-1">Case History and Notable Achievements</label>
+                            <textarea 
+                                onChange={e => setCaseHistory(e.target.value)} 
+                                value={caseHistory} 
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500" 
+                                rows="4" 
+                                placeholder="Detail notable cases, research, or awards..."
                             ></textarea>
                         </div>
                     </div>

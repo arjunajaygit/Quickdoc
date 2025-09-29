@@ -53,7 +53,7 @@ const appointmentCancel = async (req, res) => {
 // API for adding Doctor
 const addDoctor = async (req, res) => {
     try {
-        const { name, email, password, speciality, degree, experience, about, fees, address } = req.body
+        const { name, email, password, speciality, degree, experience, about, caseHistory, fees, address } = req.body
         const imageFile = req.file
 
         // checking for all data to add doctor
@@ -88,6 +88,7 @@ const addDoctor = async (req, res) => {
             degree,
             experience,
             about,
+            caseHistory,
             fees,
             address: JSON.parse(address),
             date: Date.now()
@@ -180,5 +181,5 @@ export {
     addDoctor,
     allDoctors,
     adminDashboard,
-    deleteDoctor  // Export the new function
+    deleteDoctor
 }

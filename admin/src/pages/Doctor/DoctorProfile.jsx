@@ -15,6 +15,7 @@ const DoctorProfile = () => {
                 address: profileData.address,
                 fees: profileData.fees,
                 about: profileData.about,
+                caseHistory: profileData.caseHistory,
                 available: profileData.available,
                 startTime: profileData.startTime,
                 endTime: profileData.endTime
@@ -65,11 +66,25 @@ const DoctorProfile = () => {
                             {isEdit ? (
                                 <textarea 
                                     onChange={(e) => setProfileData(prev => ({ ...prev, about: e.target.value }))} 
-                                    className='w-full outline-amber-400 p-2' 
+                                    className='w-full outline-amber-400 p-2 border rounded' 
                                     rows={8} 
                                     value={profileData.about} 
                                 />
                             ) : profileData.about}
+                        </p>
+                    </div>
+
+                    <div className='mt-3'>
+                        <p className='flex items-center gap-1 text-sm font-medium text-[#262626]'>Case History and Notable Achievements :</p>
+                        <p className='text-sm text-gray-600 max-w-[700px] mt-1'>
+                            {isEdit ? (
+                                <textarea 
+                                    onChange={(e) => setProfileData(prev => ({ ...prev, caseHistory: e.target.value }))} 
+                                    className='w-full outline-amber-400 p-2 border rounded' 
+                                    rows={8} 
+                                    value={profileData.caseHistory} 
+                                />
+                            ) : profileData.caseHistory}
                         </p>
                     </div>
 

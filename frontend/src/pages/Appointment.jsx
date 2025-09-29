@@ -196,6 +196,20 @@ const Appointment = () => {
                             {docInfo.about}
                         </p>
                     </div>
+
+                    {docInfo.caseHistory && (
+                        <div className="mt-6">
+                            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M11 3a1 1 0 10-2 0v1.586l-1.293-1.293a1 1 0 00-1.414 1.414L7.586 6H6a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V8a2 2 0 00-2-2h-1.586l1.293-1.293a1 1 0 00-1.414-1.414L11 4.586V3zM7 10a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" />
+                                </svg>
+                                Case History & Notable Achievements
+                            </h3>
+                            <p className="mt-2 text-gray-600 leading-relaxed whitespace-pre-wrap">
+                                {docInfo.caseHistory}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 

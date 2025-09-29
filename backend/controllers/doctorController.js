@@ -115,7 +115,7 @@ const doctorProfile = async (req, res) => {
 // API to update doctor profile data from Doctor Panel
 const updateDoctorProfile = async (req, res) => {
     try {
-        const { docId, fees, address, available, about, startTime, endTime } = req.body;
+        const { docId, fees, address, available, about, caseHistory, startTime, endTime } = req.body;
 
         // Validate working hours if provided
         if (startTime && endTime) {
@@ -144,6 +144,7 @@ const updateDoctorProfile = async (req, res) => {
                 address,
                 available,
                 about,
+                caseHistory,
                 startTime,
                 endTime
             },
