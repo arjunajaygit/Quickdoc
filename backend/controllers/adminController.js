@@ -123,10 +123,19 @@ const adminDashboard = async (req, res) => {
         const users = await userModel.find({})
         const appointments = await appointmentModel.find({})
 
+        // Calculate total earnings from completed or paid appointments
+        let totalEarnings = 0;
+        appointments.forEach((appointment) => {
+            if (appointment.isCompleted || appointment.payment) {
+                totalEarnings += appointment.amount;
+            }
+        });
+
         const dashData = {
             doctors: doctors.length,
             appointments: appointments.length,
             patients: users.length,
+            earnings: totalEarnings,
             latestAppointments: appointments.reverse()
         }
 
@@ -143,14 +152,12 @@ const deleteDoctor = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // First delete the doctor's image from Cloudinary if needed
         const doctor = await doctorModel.findById(id);
         if (doctor?.image) {
             const publicId = doctor.image.split('/').pop().split('.')[0];
             await cloudinary.uploader.destroy(publicId);
         }
 
-        // Then delete the doctor from database
         const deletedDoctor = await doctorModel.findByIdAndDelete(id);
         
         if (!deletedDoctor) {

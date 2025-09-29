@@ -5,7 +5,7 @@ import { AppContext } from '../../context/AppContext';
 
 const DoctorDashboard = () => {
   const { dToken, dashData, getDashData, cancelAppointment, completeAppointment } = useContext(DoctorContext);
-  const { slotDateFormat, currency } = useContext(AppContext);
+  const { slotDateFormat } = useContext(AppContext);
 
   useEffect(() => {
     if (dToken) {
@@ -18,13 +18,6 @@ const DoctorDashboard = () => {
 
       {/* Dashboard Stats */}
       <div className='flex flex-wrap gap-2'>
-        <div className='flex items-center gap-2 bg-white p-3 min-w-44 rounded border border-gray-200 cursor-pointer hover:scale-105 transition-all'>
-          <img className='w-10' src={assets.earning_icon} alt="" />
-          <div>
-            <p className='text-lg font-semibold text-gray-700'>{currency} {dashData.earnings}</p>
-            <p className='text-gray-500 text-sm'>Earnings</p>
-          </div>
-        </div>
         <div className='flex items-center gap-2 bg-white p-3 min-w-44 rounded border border-gray-200 cursor-pointer hover:scale-105 transition-all'>
           <img className='w-10' src={assets.appointments_icon} alt="" />
           <div>

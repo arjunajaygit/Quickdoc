@@ -1,178 +1,261 @@
-import React, { useEffect } from 'react'
-import { assets } from '../../assets/assets'
-import { useContext } from 'react'
-import { AdminContext } from '../../context/AdminContext'
-import { AppContext } from '../../context/AppContext'
+import React, { useEffect, useState, useMemo, useContext } from 'react';
+import { assets } from '../../assets/assets';
+import { AdminContext } from '../../context/AdminContext';
+import { AppContext } from '../../context/AppContext';
+
+// THE FIX: The Modal component is now defined OUTSIDE of the AllAppointments component.
+// This prevents it from being re-created on every render, solving the event listener issue.
+const PatientDetailModal = ({ patient, onClose }) => {
+  const { calculateAge } = useContext(AppContext);
+
+  if (!patient) return null;
+
+  return (
+    // Backdrop
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50"
+      onClick={onClose}
+    >
+      {/* Modal Content */}
+      <div 
+        className="bg-white rounded-2xl shadow-lg w-full max-w-lg m-4 p-8 relative animate-fade-in-up"
+        onClick={e => e.stopPropagation()} 
+      >
+        {/* Close Button (reverted to a semantic <button> now that the root issue is solved) */}
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 z-10 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Header with Image and Name */}
+        <div className="flex flex-col items-center text-center border-b pb-6 mb-6">
+          <img 
+            src={patient.image} 
+            alt={patient.name} 
+            className="w-24 h-24 rounded-full object-cover border-4 border-amber-100 mb-4"
+          />
+          <h2 className="text-2xl font-bold text-gray-800">{patient.name}</h2>
+          <p className="text-gray-600">{patient.email}</p>
+        </div>
+
+        {/* Details Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div>
+            <p className="text-sm text-gray-500">Phone</p>
+            <p className="text-md font-medium text-gray-800">{patient.phone}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Gender</p>
+            <p className="text-md font-medium text-gray-800">{patient.gender}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Date of Birth</p>
+            <p className="text-md font-medium text-gray-800">{patient.dob}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Age</p>
+            <p className="text-md font-medium text-gray-800">{calculateAge(patient.dob)} Years</p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="text-sm text-gray-500">Address</p>
+            <p className="text-md font-medium text-gray-800">
+              {patient.address.line1}{patient.address.line2 ? `, ${patient.address.line2}` : ''}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 const AllAppointments = () => {
-  const { aToken, appointments, cancelAppointment, getAllAppointments } = useContext(AdminContext)
-  const { calculateAge, currencySymbol } = useContext(AppContext)
+  const { aToken, appointments, cancelAppointment, getAllAppointments } = useContext(AdminContext);
+  const { calculateAge, currencySymbol } = useContext(AppContext);
 
-  // Corrected date formatting function
+  // State for the modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+
+  // State for filter values
+  const [filterDate, setFilterDate] = useState('');
+  const [filterDoctor, setFilterDoctor] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  
+  // State for the list that will be displayed
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
+
+  // Function to open the modal with patient data
+  const handlePatientClick = (patientData) => {
+    setSelectedPatient(patientData);
+    setIsModalOpen(true);
+  };
+
   const slotDateFormat = (slotDate) => {
-    const dateArray = slotDate.split('_')
-    const day = dateArray[0]
-    const monthIndex = parseInt(dateArray[1]) - 1 // Convert to 0-indexed
-    const year = dateArray[2]
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    return `${day} ${months[monthIndex]} ${year}`
+    if (!slotDate) return '';
+    const dateArray = slotDate.split('_');
+    const day = dateArray[0];
+    const monthIndex = parseInt(dateArray[1]) - 1;
+    const year = dateArray[2];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${day} ${months[monthIndex]} ${year}`;
   }
 
   useEffect(() => {
     if (aToken) {
-      getAllAppointments()
+      getAllAppointments();
     }
-  }, [aToken])
+  }, [aToken]);
+
+  const doctorList = useMemo(() => {
+    const doctors = new Map();
+    appointments.forEach(app => {
+      if (!doctors.has(app.docId)) {
+        doctors.set(app.docId, app.docData.name);
+      }
+    });
+    return Array.from(doctors, ([id, name]) => ({ id, name }));
+  }, [appointments]);
+
+  useEffect(() => {
+    let filteredData = [...appointments];
+    if (filterDate) {
+      const formattedFilterDate = filterDate.split('-').reverse().join('_');
+      filteredData = filteredData.filter(item => {
+        const [d, m, y] = item.slotDate.split('_');
+        const itemDate = `${d.padStart(2, '0')}_${m.padStart(2, '0')}_${y}`;
+        const filterDateParts = formattedFilterDate.split('_');
+        const formattedFilter = `${filterDateParts[0].padStart(2,'0')}_${filterDateParts[1].padStart(2,'0')}_${filterDateParts[2]}`;
+        return itemDate === formattedFilter;
+      });
+    }
+    if (filterDoctor !== 'all') {
+      filteredData = filteredData.filter(item => item.docId === filterDoctor);
+    }
+    if (filterStatus !== 'all') {
+      filteredData = filteredData.filter(item => {
+        if (filterStatus === 'completed') return item.isCompleted;
+        if (filterStatus === 'cancelled') return item.cancelled;
+        if (filterStatus === 'pending') return !item.isCompleted && !item.cancelled;
+        return true;
+      });
+    }
+    setFilteredAppointments(filteredData);
+  }, [appointments, filterDate, filterDoctor, filterStatus]);
+  
+  const handleClearFilters = () => {
+    setFilterDate('');
+    setFilterDoctor('all');
+    setFilterStatus('all');
+  }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">All Appointments</h2>
-          <p className="text-gray-600 mt-1">{appointments.length} total appointments</p>
-        </div>
-
-        {/* Desktop Table */}
-        <div className="hidden md:block">
-          <div className="grid grid-cols-12 gap-4 py-4 px-6 bg-gray-50 font-medium text-gray-700">
-            <div className="col-span-1">#</div>
-            <div className="col-span-3">Patient</div>
-            <div className="col-span-1">Age</div>
-            <div className="col-span-2">Date & Time</div>
-            <div className="col-span-3">Doctor</div>
-            <div className="col-span-1">Fees</div>
-            <div className="col-span-1">Status</div>
+    <>
+      <PatientDetailModal 
+        patient={selectedPatient} 
+        onClose={() => setIsModalOpen(false)} 
+      />
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-800">All Appointments</h2>
+            <p className="text-gray-600 mt-1">{filteredAppointments.length} appointments found</p>
           </div>
 
-          {appointments.map((item, index) => (
-            <div 
-              key={index} 
-              className="grid grid-cols-12 gap-4 py-4 px-6 border-b border-gray-100 hover:bg-amber-50 transition-colors"
-            >
-              <div className="col-span-1 flex items-center text-gray-500">{index + 1}</div>
-              
-              <div className="col-span-3 flex items-center gap-3">
-                <img 
-                  src={item.userData.image} 
-                  className="w-8 h-8 rounded-full object-cover border border-gray-200" 
-                  alt="Patient" 
-                />
-                <span className="text-gray-800">{item.userData.name}</span>
-              </div>
-              
-              <div className="col-span-1 flex items-center text-gray-500">
-                {calculateAge(item.userData.dob)}
-              </div>
-              
-              <div className="col-span-2 flex items-center text-gray-600">
-                {slotDateFormat(item.slotDate)}, {item.slotTime}
-              </div>
-              
-              <div className="col-span-3 flex items-center gap-3">
-                <img 
-                  src={item.docData.image} 
-                  className="w-8 h-8 rounded-full object-cover border border-gray-200 bg-gray-100" 
-                  alt="Doctor" 
-                />
-                <span className="text-gray-800">{item.docData.name}</span>
-              </div>
-              
-              <div className="col-span-1 flex items-center font-medium text-amber-600">
-                {currencySymbol}{item.amount}
-              </div>
-              
-              <div className="col-span-1 flex items-center justify-end">
-                {item.cancelled ? (
-                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                    Cancelled
-                  </span>
-                ) : item.isCompleted ? (
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                    Completed
-                  </span>
-                ) : (
-                  <button 
-                    onClick={() => cancelAppointment(item._id)}
-                    className="p-1 text-gray-500 hover:text-red-500 transition-colors"
-                    title="Cancel Appointment"
-                  >
-                    <img className="w-6 h-6" src={assets.cancel_icon} alt="Cancel" />
-                  </button>
-                )}
-              </div>
+          <div className="p-4 flex flex-wrap items-center justify-between gap-4 bg-amber-50/30 border-b border-gray-200">
+            <div className='flex flex-wrap items-center gap-4'>
+              <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"/>
+              <select value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
+                <option value="all">All Doctors</option>
+                {doctorList.map(doc => (<option key={doc.id} value={doc.id}>{doc.name}</option>))}
+              </select>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </div>
-          ))}
-        </div>
+            <button onClick={handleClearFilters} className="px-4 py-2 border border-amber-600 text-amber-700 font-medium rounded-lg hover:bg-amber-100 transition-colors">
+              Clear Filters
+            </button>
+          </div>
 
-        {/* Mobile Cards */}
-        <div className="md:hidden">
-          {appointments.map((item, index) => (
-            <div key={index} className="p-4 border-b border-gray-200">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-500">{index + 1}.</span>
-                  <img 
-                    src={item.userData.image} 
-                    className="w-10 h-10 rounded-full object-cover border border-gray-200" 
-                    alt="Patient" 
-                  />
-                  <div>
-                    <h3 className="font-medium text-gray-800">{item.userData.name}</h3>
-                    <p className="text-xs text-gray-500">{calculateAge(item.userData.dob)} years</p>
-                  </div>
-                </div>
-                {item.cancelled ? (
-                  <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                    Cancelled
-                  </span>
-                ) : item.isCompleted ? (
-                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                    Completed
-                  </span>
-                ) : (
-                  <button 
-                    onClick={() => cancelAppointment(item._id)}
-                    className="p-1 text-gray-500 hover:text-red-500 transition-colors"
-                    title="Cancel Appointment"
-                  >
-                    <img className="w-10 h-10" src={assets.cancel_icon} alt="Cancel" />
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500">Date & Time</p>
-                  <p className="text-gray-800">
-                    {slotDateFormat(item.slotDate)}, {item.slotTime}
-                  </p>
-                </div>
-                
-                <div>
-                  <p className="text-gray-500">Doctor</p>
-                  <div className="flex items-center gap-2">
-                    <img 
-                      src={item.docData.image} 
-                      className="w-6 h-6 rounded-full object-cover border border-gray-200 bg-gray-100" 
-                      alt="Doctor" 
-                    />
-                    <span className="text-gray-800">{item.docData.name}</span>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-gray-500">Fees</p>
-                  <p className="text-amber-600 font-medium">
-                    {currencySymbol}{item.amount}
-                  </p>
-                </div>
-              </div>
+          {/* Desktop Table */}
+          <div className="hidden md:block">
+            <div className="grid grid-cols-12 gap-4 py-4 px-6 bg-gray-50 font-medium text-gray-700">
+              <div className="col-span-1">#</div>
+              <div className="col-span-3">Patient</div>
+              <div className="col-span-1">Age</div>
+              <div className="col-span-2">Date & Time</div>
+              <div className="col-span-3">Doctor</div>
+              <div className="col-span-1">Fees</div>
+              <div className="col-span-1 text-right">Status</div>
             </div>
-          ))}
+            {filteredAppointments.map((item, index) => (
+              <div key={index} className="grid grid-cols-12 gap-4 py-4 px-6 border-b border-gray-100 hover:bg-amber-50 transition-colors">
+                <div className="col-span-1 flex items-center text-gray-500">{index + 1}</div>
+                <div className="col-span-3 flex items-center gap-3">
+                  <img src={item.userData.image} className="w-8 h-8 rounded-full object-cover border border-gray-200" alt="Patient" />
+                  <button onClick={() => handlePatientClick(item.userData)} className="text-gray-800 hover:underline cursor-pointer">
+                    {item.userData.name}
+                  </button>
+                </div>
+                <div className="col-span-1 flex items-center text-gray-500">{calculateAge(item.userData.dob)}</div>
+                <div className="col-span-2 flex items-center text-gray-600">{slotDateFormat(item.slotDate)}, {item.slotTime}</div>
+                <div className="col-span-3 flex items-center gap-3">
+                  <img src={item.docData.image} className="w-8 h-8 rounded-full object-cover border border-gray-200 bg-gray-100" alt="Doctor" />
+                  <span className="text-gray-800">{item.docData.name}</span>
+                </div>
+                <div className="col-span-1 flex items-center font-medium text-amber-600">{currencySymbol}{item.amount}</div>
+                <div className="col-span-1 flex items-center justify-end">
+                  {item.cancelled ? (<span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Cancelled</span>) 
+                  : item.isCompleted ? (<span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Completed</span>) 
+                  : (<button onClick={() => cancelAppointment(item._id)} className="p-1 text-gray-500 hover:text-red-500 transition-colors" title="Cancel Appointment">
+                      <img className="w-6 h-6" src={assets.cancel_icon} alt="Cancel" />
+                    </button>)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden">
+            {filteredAppointments.map((item, index) => (
+              <div key={index} className="p-4 border-b border-gray-200">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-500">{index + 1}.</span>
+                    <img src={item.userData.image} className="w-10 h-10 rounded-full object-cover border border-gray-200" alt="Patient" />
+                    <div>
+                      <button onClick={() => handlePatientClick(item.userData)} className="font-medium text-gray-800 text-left hover:underline cursor-pointer">
+                        {item.userData.name}
+                      </button>
+                      <p className="text-xs text-gray-500">{calculateAge(item.userData.dob)} years</p>
+                    </div>
+                  </div>
+                  {item.cancelled ? (<span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Cancelled</span>) 
+                  : item.isCompleted ? (<span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Completed</span>) 
+                  : (<button onClick={() => cancelAppointment(item._id)} className="p-1 text-gray-500 hover:text-red-500 transition-colors" title="Cancel Appointment">
+                      <img className="w-10 h-10" src={assets.cancel_icon} alt="Cancel" />
+                    </button>)}
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div><p className="text-gray-500">Date & Time</p><p className="text-gray-800">{slotDateFormat(item.slotDate)}, {item.slotTime}</p></div>
+                  <div><p className="text-gray-500">Doctor</p><div className="flex items-center gap-2"><img src={item.docData.image} className="w-6 h-6 rounded-full object-cover border border-gray-200 bg-gray-100" alt="Doctor" /><span className="text-gray-800">{item.docData.name}</span></div></div>
+                  <div><p className="text-gray-500">Fees</p><p className="text-amber-600 font-medium">{currencySymbol}{item.amount}</p></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
-export default AllAppointments
+export default AllAppointments;

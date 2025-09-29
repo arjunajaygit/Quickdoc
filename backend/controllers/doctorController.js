@@ -169,15 +169,7 @@ const updateDoctorProfile = async (req, res) => {
 const doctorDashboard = async (req, res) => {
     try {
         const { docId } = req.body;
-
         const appointments = await appointmentModel.find({ docId });
-
-        let earnings = 0;
-        appointments.forEach((item) => {
-            if (item.isCompleted || item.payment) {
-                earnings += item.amount;
-            }
-        });
 
         let patients = [];
         appointments.forEach((item) => {
@@ -187,7 +179,6 @@ const doctorDashboard = async (req, res) => {
         });
 
         const dashData = {
-            earnings,
             appointments: appointments.length,
             patients: patients.length,
             latestAppointments: appointments.reverse()
