@@ -3,25 +3,21 @@ import { assets } from '../../assets/assets';
 import { AdminContext } from '../../context/AdminContext';
 import { AppContext } from '../../context/AppContext';
 
-// THE FIX: The Modal component is now defined OUTSIDE of the AllAppointments component.
-// This prevents it from being re-created on every render, solving the event listener issue.
+// This component is correctly defined and needs no changes.
 const PatientDetailModal = ({ patient, onClose }) => {
   const { calculateAge } = useContext(AppContext);
 
   if (!patient) return null;
 
   return (
-    // Backdrop
     <div 
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50"
       onClick={onClose}
     >
-      {/* Modal Content */}
       <div 
         className="bg-white rounded-2xl shadow-lg w-full max-w-lg m-4 p-8 relative animate-fade-in-up"
         onClick={e => e.stopPropagation()} 
       >
-        {/* Close Button (reverted to a semantic <button> now that the root issue is solved) */}
         <button 
           onClick={onClose} 
           className="absolute top-4 right-4 z-10 p-1 rounded-full text-gray-400 hover:bg-gray-200 hover:text-gray-700 transition-all"
@@ -31,7 +27,6 @@ const PatientDetailModal = ({ patient, onClose }) => {
           </svg>
         </button>
 
-        {/* Header with Image and Name */}
         <div className="flex flex-col items-center text-center border-b pb-6 mb-6">
           <img 
             src={patient.image} 
@@ -42,7 +37,6 @@ const PatientDetailModal = ({ patient, onClose }) => {
           <p className="text-gray-600">{patient.email}</p>
         </div>
 
-        {/* Details Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           <div>
             <p className="text-sm text-gray-500">Phone</p>
@@ -77,19 +71,13 @@ const AllAppointments = () => {
   const { aToken, appointments, cancelAppointment, getAllAppointments } = useContext(AdminContext);
   const { calculateAge, currencySymbol } = useContext(AppContext);
 
-  // State for the modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-
-  // State for filter values
   const [filterDate, setFilterDate] = useState('');
   const [filterDoctor, setFilterDoctor] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  
-  // State for the list that will be displayed
   const [filteredAppointments, setFilteredAppointments] = useState([]);
 
-  // Function to open the modal with patient data
   const handlePatientClick = (patientData) => {
     setSelectedPatient(patientData);
     setIsModalOpen(true);
@@ -155,10 +143,14 @@ const AllAppointments = () => {
 
   return (
     <>
-      <PatientDetailModal 
-        patient={selectedPatient} 
-        onClose={() => setIsModalOpen(false)} 
-      />
+      {/* THE FIX: Conditionally render the modal based on isModalOpen state */}
+      {isModalOpen && (
+        <PatientDetailModal 
+          patient={selectedPatient} 
+          onClose={() => setIsModalOpen(false)} 
+        />
+      )}
+
       <div className="max-w-6xl mx-auto p-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
@@ -201,7 +193,7 @@ const AllAppointments = () => {
                 <div className="col-span-1 flex items-center text-gray-500">{index + 1}</div>
                 <div className="col-span-3 flex items-center gap-3">
                   <img src={item.userData.image} className="w-8 h-8 rounded-full object-cover border border-gray-200" alt="Patient" />
-                  <button onClick={() => handlePatientClick(item.userData)} className="text-gray-800 hover:underline cursor-pointer">
+                  <button onClick={() => handlePatientClick(item.userData)} className="text-gray-800 hover:underline cursor-pointer text-left">
                     {item.userData.name}
                   </button>
                 </div>
