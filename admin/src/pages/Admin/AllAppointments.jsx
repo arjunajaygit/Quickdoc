@@ -3,7 +3,6 @@ import { assets } from '../../assets/assets';
 import { AdminContext } from '../../context/AdminContext';
 import { AppContext } from '../../context/AppContext';
 
-// This component is correctly defined and needs no changes.
 const PatientDetailModal = ({ patient, onClose }) => {
   const { calculateAge } = useContext(AppContext);
 
@@ -143,7 +142,6 @@ const AllAppointments = () => {
 
   return (
     <>
-      {/* THE FIX: Conditionally render the modal based on isModalOpen state */}
       {isModalOpen && (
         <PatientDetailModal 
           patient={selectedPatient} 
@@ -151,95 +149,120 @@ const AllAppointments = () => {
         />
       )}
 
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="w-full max-w-7xl mx-auto p-4 md:p-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-800">All Appointments</h2>
-            <p className="text-gray-600 mt-1">{filteredAppointments.length} appointments found</p>
+          <div className="p-5 border-b border-gray-200">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">All Appointments</h2>
+            <p className="text-gray-600 mt-1 text-sm">{filteredAppointments.length} appointments found</p>
           </div>
 
-          <div className="p-4 flex flex-wrap items-center justify-between gap-4 bg-amber-50/30 border-b border-gray-200">
+          <div className="p-4 flex flex-wrap items-center justify-between gap-4 bg-gray-50 border-b border-gray-200">
             <div className='flex flex-wrap items-center gap-4'>
-              <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"/>
-              <select value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
+              <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="text-sm px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"/>
+              <select value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)} className="text-sm px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
                 <option value="all">All Doctors</option>
                 {doctorList.map(doc => (<option key={doc.id} value={doc.id}>{doc.name}</option>))}
               </select>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="text-sm px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors">
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
-            <button onClick={handleClearFilters} className="px-4 py-2 border border-amber-600 text-amber-700 font-medium rounded-lg hover:bg-amber-100 transition-colors">
+            <button onClick={handleClearFilters} className="px-4 py-2 border border-amber-600 text-amber-700 font-medium rounded-lg hover:bg-amber-100 transition-colors text-sm">
               Clear Filters
             </button>
           </div>
 
           {/* Desktop Table */}
           <div className="hidden md:block">
-            <div className="grid grid-cols-12 gap-4 py-4 px-6 bg-gray-50 font-medium text-gray-700">
+            <div className="grid grid-cols-12 gap-4 py-3 px-6 bg-gray-50/70 font-semibold text-xs uppercase tracking-wider text-gray-500 border-b border-gray-200">
               <div className="col-span-1">#</div>
-              <div className="col-span-3">Patient</div>
-              <div className="col-span-1">Age</div>
-              <div className="col-span-2">Date & Time</div>
+              <div className="col-span-2">Patient</div>
               <div className="col-span-3">Doctor</div>
+              <div className="col-span-2">Date & Time</div>
+              <div className="col-span-1">Payment</div>
               <div className="col-span-1">Fees</div>
-              <div className="col-span-1 text-right">Status</div>
+              <div className="col-span-2 text-center">Status</div>
             </div>
-            {filteredAppointments.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-4 py-4 px-6 border-b border-gray-100 hover:bg-amber-50 transition-colors">
-                <div className="col-span-1 flex items-center text-gray-500">{index + 1}</div>
-                <div className="col-span-3 flex items-center gap-3">
-                  <img src={item.userData.image} className="w-8 h-8 rounded-full object-cover border border-gray-200" alt="Patient" />
-                  <button onClick={() => handlePatientClick(item.userData)} className="text-gray-800 hover:underline cursor-pointer text-left">
-                    {item.userData.name}
-                  </button>
+            <div className="max-h-[65vh] overflow-y-auto">
+              {filteredAppointments.map((item, index) => (
+                <div key={index} className="grid grid-cols-12 gap-4 py-4 px-6 border-b border-gray-100 hover:bg-amber-50/50 transition-colors text-sm items-center">
+                  <div className="col-span-1 text-gray-500 font-medium">{index + 1}</div>
+                  <div className="col-span-2 flex items-center gap-3">
+                    <img src={item.userData.image} className="w-9 h-9 rounded-full object-cover border-2 border-white ring-1 ring-gray-200" alt="Patient" />
+                    <button onClick={() => handlePatientClick(item.userData)} className="font-medium text-gray-800 hover:text-amber-600 hover:underline cursor-pointer text-left">
+                      {item.userData.name}
+                    </button>
+                  </div>
+                  <div className="col-span-3 flex items-center gap-3 text-gray-700">
+                    <img src={item.docData.image} className="w-9 h-9 rounded-full object-cover border-2 border-white ring-1 ring-gray-200" alt="Doctor" />
+                    <span>{item.docData.name}</span>
+                  </div>
+                  <div className="col-span-2 text-gray-600">
+                    <p>{slotDateFormat(item.slotDate)}</p>
+                    <p className="text-xs">{item.slotTime}</p>
+                  </div>
+                  <div className="col-span-1">
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      item.payment 
+                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                    }`}>
+                      {item.payment ? 'Online' : 'CASH'}
+                    </span>
+                  </div>
+                  <div className="col-span-1 font-medium text-gray-800">{currencySymbol}{item.amount}</div>
+                  <div className="col-span-2 flex items-center justify-center">
+                    {item.cancelled ? (<span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">Cancelled</span>) 
+                    : item.isCompleted ? (<span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Completed</span>) 
+                    : (
+                      <button onClick={() => cancelAppointment(item._id)} className="p-3 rounded-full hover:bg-red-100 transition-colors" title="Cancel Appointment">
+                        <img className="w-10 h-10" src={assets.cancel_icon} alt="Cancel" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="col-span-1 flex items-center text-gray-500">{calculateAge(item.userData.dob)}</div>
-                <div className="col-span-2 flex items-center text-gray-600">{slotDateFormat(item.slotDate)}, {item.slotTime}</div>
-                <div className="col-span-3 flex items-center gap-3">
-                  <img src={item.docData.image} className="w-8 h-8 rounded-full object-cover border border-gray-200 bg-gray-100" alt="Doctor" />
-                  <span className="text-gray-800">{item.docData.name}</span>
-                </div>
-                <div className="col-span-1 flex items-center font-medium text-amber-600">{currencySymbol}{item.amount}</div>
-                <div className="col-span-1 flex items-center justify-end">
-                  {item.cancelled ? (<span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Cancelled</span>) 
-                  : item.isCompleted ? (<span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Completed</span>) 
-                  : (<button onClick={() => cancelAppointment(item._id)} className="p-1 text-gray-500 hover:text-red-500 transition-colors" title="Cancel Appointment">
-                      <img className="w-6 h-6" src={assets.cancel_icon} alt="Cancel" />
-                    </button>)}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Mobile Cards */}
           <div className="md:hidden">
             {filteredAppointments.map((item, index) => (
-              <div key={index} className="p-4 border-b border-gray-200">
-                <div className="flex justify-between items-start mb-3">
+              <div key={index} className="p-4 border-b border-gray-200 last:border-b-0">
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-gray-500">{index + 1}.</span>
-                    <img src={item.userData.image} className="w-10 h-10 rounded-full object-cover border border-gray-200" alt="Patient" />
+                    <img src={item.userData.image} className="w-12 h-12 rounded-full object-cover border border-gray-200" alt="Patient" />
                     <div>
-                      <button onClick={() => handlePatientClick(item.userData)} className="font-medium text-gray-800 text-left hover:underline cursor-pointer">
+                      <button onClick={() => handlePatientClick(item.userData)} className="font-semibold text-lg text-gray-800 text-left hover:underline cursor-pointer">
                         {item.userData.name}
                       </button>
-                      <p className="text-xs text-gray-500">{calculateAge(item.userData.dob)} years</p>
+                      <p className="text-sm text-gray-500">vs Dr. {item.docData.name}</p>
                     </div>
                   </div>
-                  {item.cancelled ? (<span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">Cancelled</span>) 
-                  : item.isCompleted ? (<span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">Completed</span>) 
-                  : (<button onClick={() => cancelAppointment(item._id)} className="p-1 text-gray-500 hover:text-red-500 transition-colors" title="Cancel Appointment">
-                      <img className="w-10 h-10" src={assets.cancel_icon} alt="Cancel" />
-                    </button>)}
+                  {item.cancelled ? (<span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">Cancelled</span>) 
+                  : item.isCompleted ? (<span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Completed</span>) 
+                  : (
+                    <button onClick={() => cancelAppointment(item._id)} className="p-4 rounded-full hover:bg-red-100 transition-colors" title="Cancel Appointment">
+                      <img className="w-12 h-12" src={assets.cancel_icon} alt="Cancel" />
+                    </button>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><p className="text-gray-500">Date & Time</p><p className="text-gray-800">{slotDateFormat(item.slotDate)}, {item.slotTime}</p></div>
-                  <div><p className="text-gray-500">Doctor</p><div className="flex items-center gap-2"><img src={item.docData.image} className="w-6 h-6 rounded-full object-cover border border-gray-200 bg-gray-100" alt="Doctor" /><span className="text-gray-800">{item.docData.name}</span></div></div>
-                  <div><p className="text-gray-500">Fees</p><p className="text-amber-600 font-medium">{currencySymbol}{item.amount}</p></div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm p-3 bg-gray-50/70 rounded-lg">
+                  <div><p className="text-gray-500 font-medium">Date & Time</p><p className="text-gray-800 font-semibold">{slotDateFormat(item.slotDate)}, {item.slotTime}</p></div>
+                  <div>
+                    <p className="text-gray-500 font-medium">Payment</p>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      item.payment 
+                        ? 'bg-green-100 text-green-800 border border-green-200' 
+                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                    }`}>
+                      {item.payment ? 'Online' : 'CASH'}
+                    </span>
+                  </div>
+                  <div><p className="text-gray-500 font-medium">Fees</p><p className="text-amber-600 font-semibold">{currencySymbol}{item.amount}</p></div>
                 </div>
               </div>
             ))}

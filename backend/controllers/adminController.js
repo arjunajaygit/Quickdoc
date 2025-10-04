@@ -180,6 +180,34 @@ const deleteDoctor = async (req, res) => {
         });
     }
 }
+const updateDoctorFee = async (req, res) => {
+    try {
+        const { doctorId, fees } = req.body;
+        if (!doctorId || fees === undefined) {
+            return res.status(400).json({ success: false, message: "Doctor ID and fee are required." });
+        }
+
+        if (isNaN(fees) || Number(fees) < 0) {
+            return res.status(400).json({ success: false, message: "Please enter a valid fee." });
+        }
+
+        const updatedDoctor = await doctorModel.findByIdAndUpdate(
+            doctorId,
+            { fees: Number(fees) },
+            { new: true }
+        );
+
+        if (!updatedDoctor) {
+            return res.status(404).json({ success: false, message: "Doctor not found." });
+        }
+
+        res.json({ success: true, message: "Fee updated successfully.", doctor: updatedDoctor });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
 
 export {
     loginAdmin,
@@ -188,5 +216,6 @@ export {
     addDoctor,
     allDoctors,
     adminDashboard,
-    deleteDoctor
+    deleteDoctor,
+    updateDoctorFee
 }

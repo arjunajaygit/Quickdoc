@@ -94,20 +94,20 @@ const DoctorDashboard = () => {
                           Completed
                         </span>
                       ) : (
-                        <div className="flex gap-1">
+                        <div className="flex gap-2">
                           <button 
                             onClick={() => cancelAppointment(item._id)} 
-                            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors group"
+                            className="p-3 hover:bg-red-50 rounded-lg transition-colors group"
                             title="Cancel Appointment"
                           >
-                            <img className="w-6 h-6 opacity-80 group-hover:opacity-100" src={assets.cancel_icon} alt="Cancel" />
+                            <img className="w-10 h-10 opacity-80 group-hover:opacity-100" src={assets.cancel_icon} alt="Cancel" />
                           </button>
                           <button 
                             onClick={() => completeAppointment(item._id)} 
-                            className="p-1.5 hover:bg-green-50 rounded-lg transition-colors group"
+                            className="p-3 hover:bg-green-50 rounded-lg transition-colors group"
                             title="Complete Appointment"
                           >
-                            <img className="w-6 h-6 opacity-80 group-hover:opacity-100" src={assets.tick_icon} alt="Complete" />
+                            <img className="w-10 h-10 opacity-80 group-hover:opacity-100" src={assets.tick_icon} alt="Complete" />
                           </button>
                         </div>
                       )}
