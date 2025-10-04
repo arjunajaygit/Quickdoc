@@ -191,7 +191,7 @@ const Reschedule = () => {
         <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="bg-white rounded-xl shadow-md p-6 border border-amber-100">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Reschedule Appointment</h1>
-                <p className="text-gray-600 mb-6">With Dr. {docInfo.name}</p>
+                <p className="text-gray-600 mb-6">With  {docInfo.name}</p>
 
                 <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-800">Current Appointment:</h3>
