@@ -16,6 +16,7 @@ const Appointment = () => {
     const [docSlots, setDocSlots] = useState([]);
     const [slotIndex, setSlotIndex] = useState(0);
     const [slotTime, setSlotTime] = useState('');
+    const [symptoms, setSymptoms] = useState(''); // New state for symptoms
 
     const navigate = useNavigate();
 
@@ -34,7 +35,6 @@ const Appointment = () => {
         const dayEnd = new Date(date);
         dayEnd.setHours(endHour, endMinute, 0, 0);
 
-        // Lunch break (12PM-1PM)
         const breakStart = new Date(date);
         breakStart.setHours(12, 0, 0, 0);
         const breakEnd = new Date(date);
@@ -43,12 +43,10 @@ const Appointment = () => {
         let currentSlot = new Date(dayStart);
         const slots = [];
 
-        // Adjust for current time if it's today
         if (date.toDateString() === new Date().toDateString()) {
             const now = new Date();
             if (currentSlot < now) {
                 currentSlot = new Date(now);
-                // Round up to nearest 15 minutes
                 const minutes = currentSlot.getMinutes();
                 currentSlot.setMinutes(minutes + (15 - (minutes % 15)));
                 currentSlot.setSeconds(0);
@@ -57,7 +55,6 @@ const Appointment = () => {
         }
 
         while (currentSlot < dayEnd) {
-            // Skip lunch break
             if (currentSlot >= breakStart && currentSlot < breakEnd) {
                 currentSlot = new Date(breakEnd);
                 continue;
@@ -80,7 +77,6 @@ const Appointment = () => {
                 });
             }
 
-            // Increment by 15 minutes
             currentSlot.setMinutes(currentSlot.getMinutes() + 15);
         }
 
@@ -122,7 +118,7 @@ const Appointment = () => {
         try {
             const { data } = await axios.post(
                 backendUrl + '/api/user/book-appointment', 
-                { docId, slotDate, slotTime }, 
+                { docId, slotDate, slotTime, symptoms }, // Include symptoms
                 { headers: { token } }
             );
             
@@ -246,7 +242,7 @@ const Appointment = () => {
                 </div>
 
                 {/* Time Selection */}
-                <div className="mb-8">
+                <div className="mb-6">
                     <h3 className="text-gray-700 font-medium mb-3">Available Time Slots</h3>
                     <div className="flex flex-wrap gap-3">
                         {docSlots.length > 0 && docSlots[slotIndex].map((item, index) => (
@@ -263,6 +259,24 @@ const Appointment = () => {
                             </button>
                         ))}
                     </div>
+                </div>
+
+                {/* Symptoms Input - NEW SECTION */}
+                <div className="mb-8">
+                    <label htmlFor="symptoms" className="block text-gray-700 font-medium mb-3">
+                        Symptoms or Health Concerns
+                    </label>
+                    <textarea
+                        id="symptoms"
+                        value={symptoms}
+                        onChange={(e) => setSymptoms(e.target.value)}
+                        placeholder="Please describe your symptoms or health concerns... (Optional)"
+                        className="w-full px-4 py-3 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                        rows="4"
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                        This information will help the doctor prepare for your consultation
+                    </p>
                 </div>
 
                 {/* Book Button */}

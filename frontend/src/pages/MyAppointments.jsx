@@ -11,12 +11,20 @@ const MyAppointments = () => {
     const [appointments, setAppointments] = useState([])
     const [payment, setPayment] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+    const [expandedSymptoms, setExpandedSymptoms] = useState({})
 
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     const slotDateFormat = (slotDate) => {
         const dateArray = slotDate.split('_')
         return `${dateArray[0]} ${months[Number(dateArray[1]) - 1]} ${dateArray[2]}`
+    }
+
+    const toggleSymptoms = (appointmentId) => {
+        setExpandedSymptoms(prev => ({
+            ...prev,
+            [appointmentId]: !prev[appointmentId]
+        }))
     }
 
     const getUserAppointments = async () => {
@@ -191,6 +199,39 @@ const MyAppointments = () => {
                                             <p>Fee: {currencySymbol}{item.docData.fees}</p>
                                         </div>
                                     </div>
+
+                                    {/* Symptoms Section */}
+                                    {item.symptoms && (
+                                        <div className="mt-4 border-t border-amber-100 pt-4">
+                                            <button
+                                                onClick={() => toggleSymptoms(item._id)}
+                                                className="flex items-center justify-between w-full text-left text-amber-700 hover:text-amber-800 transition-colors"
+                                            >
+                                                <div className="flex items-center">
+                                                    <svg className="w-5 h-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                    </svg>
+                                                    <span className="font-medium">Submitted Symptoms</span>
+                                                </div>
+                                                <svg 
+                                                    className={`w-5 h-5 transform transition-transform ${expandedSymptoms[item._id] ? 'rotate-180' : ''}`} 
+                                                    fill="none" 
+                                                    stroke="currentColor" 
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </button>
+                                            
+                                            {expandedSymptoms[item._id] && (
+                                                <div className="mt-3 p-4 bg-amber-50 rounded-lg border border-amber-100">
+                                                    <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
+                                                        {item.symptoms}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 <div className="md:w-1/6 flex flex-col gap-3">
