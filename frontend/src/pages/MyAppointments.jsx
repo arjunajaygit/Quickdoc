@@ -200,7 +200,6 @@ const MyAppointments = () => {
                                         </div>
                                     </div>
 
-                                    {/* Symptoms Section */}
                                     {item.symptoms && (
                                         <div className="mt-4 border-t border-amber-100 pt-4">
                                             <button
@@ -234,7 +233,7 @@ const MyAppointments = () => {
                                     )}
                                 </div>
                                 
-                                <div className="md:w-1/6 flex flex-col gap-3">
+                                <div className="md:w-1/6 flex flex-col gap-3 mt-4 md:mt-0">
                                     {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && (
                                         <button 
                                             onClick={() => setPayment(item._id)}
@@ -272,14 +271,22 @@ const MyAppointments = () => {
                                             Appointment Completed
                                         </div>
                                     )}
-                                    
+
                                     {!item.cancelled && !item.isCompleted && (
-                                        <button 
-                                            onClick={() => cancelAppointment(item._id)}
-                                            className="w-full py-2 border border-red-300 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
+                                        <>
+                                            <button 
+                                                onClick={() => navigate(`/reschedule/${item._id}`)}
+                                                className="w-full py-2 border border-amber-500 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                            >
+                                                Reschedule
+                                            </button>
+                                            <button 
+                                                onClick={() => cancelAppointment(item._id)}
+                                                className="w-full py-2 border border-red-300 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </>
                                     )}
                                     
                                     {item.cancelled && !item.isCompleted && (

@@ -52,7 +52,8 @@ const registerUser = async (req, res) => {
 
         res.json({ success: true, token })
 
-    } catch (error) {
+    } catch (error)
+    {
         console.log(error)
         res.json({ success: false, message: error.message })
     }
@@ -131,10 +132,9 @@ const updateProfile = async (req, res) => {
 }
 
 // API to book appointment 
-// In your bookAppointment function, add symptoms parameter
 const bookAppointment = async (req, res) => {
     try {
-        const { userId, docId, slotDate, slotTime, symptoms } = req.body; // Add symptoms
+        const { userId, docId, slotDate, slotTime, symptoms } = req.body;
         const docData = await doctorModel.findById(docId).select('-password');
 
         if (!docData.available) {
@@ -166,7 +166,7 @@ const bookAppointment = async (req, res) => {
             amount: docData.fees,
             slotTime,
             slotDate,
-            symptoms: symptoms || '', // Add symptoms to appointment data
+            symptoms: symptoms || '',
             date: Date.now()
         };
 
@@ -338,6 +338,90 @@ const verifyStripe = async (req, res) => {
 
 }
 
+// API to get a single appointment's details
+const getAppointmentDetails = async (req, res) => {
+    try {
+        const { appointmentId } = req.params;
+        const { userId } = req.body;
+
+        const appointment = await appointmentModel.findById(appointmentId);
+
+        if (!appointment) {
+            return res.status(404).json({ success: false, message: 'Appointment not found' });
+        }
+
+        if (appointment.userId !== userId) {
+            return res.status(403).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        res.json({ success: true, appointment });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// API to reschedule an appointment
+const rescheduleAppointment = async (req, res) => {
+    try {
+        const { userId, appointmentId, newSlotDate, newSlotTime } = req.body;
+        
+        const appointment = await appointmentModel.findById(appointmentId);
+        if (!appointment) {
+            return res.json({ success: false, message: "Appointment not found" });
+        }
+
+        if (appointment.userId !== userId) {
+            return res.json({ success: false, message: "Unauthorized action" });
+        }
+
+        if (appointment.isCompleted || appointment.cancelled) {
+            return res.json({ success: false, message: "Cannot reschedule a completed or cancelled appointment" });
+        }
+
+        const { docId, slotDate: oldSlotDate, slotTime: oldSlotTime } = appointment;
+
+        const doctor = await doctorModel.findById(docId);
+        if (!doctor) {
+            return res.json({ success: false, message: "Doctor not found" });
+        }
+
+        let { slots_booked } = doctor;
+
+        if (slots_booked[newSlotDate] && slots_booked[newSlotDate].includes(newSlotTime)) {
+            return res.json({ success: false, message: 'New slot is not available' });
+        }
+
+        if (slots_booked[oldSlotDate]) {
+            slots_booked[oldSlotDate] = slots_booked[oldSlotDate].filter(time => time !== oldSlotTime);
+            if (slots_booked[oldSlotDate].length === 0) {
+                delete slots_booked[oldSlotDate];
+            }
+        }
+
+        if (slots_booked[newSlotDate]) {
+            slots_booked[newSlotDate].push(newSlotTime);
+        } else {
+            slots_booked[newSlotDate] = [newSlotTime];
+        }
+
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+        await appointmentModel.findByIdAndUpdate(appointmentId, {
+            slotDate: newSlotDate,
+            slotTime: newSlotTime
+        });
+
+        res.json({ success: true, message: 'Appointment rescheduled successfully!' });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
 export {
     loginUser,
     registerUser,
@@ -349,5 +433,7 @@ export {
     paymentRazorpay,
     verifyRazorpay,
     paymentStripe,
-    verifyStripe
+    verifyStripe,
+    getAppointmentDetails,
+    rescheduleAppointment
 }

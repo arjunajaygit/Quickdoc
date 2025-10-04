@@ -1,5 +1,6 @@
 import React from 'react'
 import Navbar from './components/Navbar'
+import Reschedule from './pages/Reschedule';
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Doctors from './pages/Doctors'
@@ -13,6 +14,8 @@ import Footer from './components/Footer'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
+
+
 
 const App = () => {
   return (
@@ -30,6 +33,7 @@ const App = () => {
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/verify' element={<Verify />} />
+        <Route path="/reschedule/:appointmentId" element={<Reschedule />} />
       </Routes>
       <Footer />
     </div>
