@@ -5,6 +5,10 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
+// --- IMPORTS FOR EMAIL NOTIFICATION ---
+import { sendEmail } from '../services/emailService.js';
+import { appointmentCancelled } from '../utils/emailTemplates.js';
+// --- END IMPORTS ---
 
 // API for admin login
 const loginAdmin = async (req, res) => {
@@ -40,7 +44,39 @@ const appointmentsAdmin = async (req, res) => {
 const appointmentCancel = async (req, res) => {
     try {
         const { appointmentId } = req.body
-        await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
+        // Fetch the appointment details BEFORE updating, so we can use them for the email.
+        const appointment = await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
+
+        // --- EMAIL NOTIFICATION ---
+        // Check if the appointment was found and updated successfully
+        if (appointment) {
+            try {
+                const { userData, docData, slotDate, slotTime } = appointment;
+                
+                // 1. Prepare and send email to the Patient
+                const patientEmailContent = appointmentCancelled(userData.name, docData.name, slotDate.replace(/_/g, '/'), slotTime);
+                sendEmail({
+                    from: process.env.GMAIL_EMAIL,
+                    to: userData.email,
+                    subject: patientEmailContent.subject,
+                    html: patientEmailContent.html,
+                });
+
+                // 2. Prepare and send email to the Doctor
+                const doctorEmailContent = appointmentCancelled(`Dr. ${docData.name}`, `Patient: ${userData.name}`, slotDate.replace(/_/g, '/'), slotTime);
+                sendEmail({
+                    from: process.env.GMAIL_EMAIL,
+                    to: docData.email,
+                    subject: 'An Appointment has been Cancelled by Admin',
+                    html: doctorEmailContent.html,
+                });
+
+            } catch (emailError) {
+                // Log any errors that occur during email sending, but don't stop the main response
+                console.error("Failed to send cancellation emails:", emailError);
+            }
+        }
+        // --- END NOTIFICATION ---
 
         res.json({ success: true, message: 'Appointment Cancelled' })
 
