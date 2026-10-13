@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 
-// API for doctor Login 
+// API for doctor Login.
 const loginDoctor = async (req, res) => {
     try {
         const { email, password } = req.body;
